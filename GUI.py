@@ -23,7 +23,6 @@ class MainWindow(wx.Frame):
     def __init__(self, parent, title):
         super(MainWindow, self).__init__(parent, title=title)
         
-        m.init()
         self.VChanger = Voice_changer()
         self.playing = False
         self.InitUI()
@@ -91,9 +90,15 @@ class MainWindow(wx.Frame):
         except ValueError:
             self.octaves = 1
         self.VChanger.recognize_from_micro(n=self.n)
-        self.recording = m.Sound(self.VChanger.voice_effect(octaves=self.octaves))
-        self.playBut.Enable()
-        self.chOctBut.Enable()
+        sr = self.VChanger.voice_effect(octaves=self.octaves)
+        if not m.get_init():
+            m.init(sr, 16, 1)
+            self.playBut.Enable()
+            self.chOctBut.Enable()
+        self.recording = m.Sound("m1.wav")
+        dlg = wx.MessageDialog(self, "Finished recording and processing", "Recording", wx.OK)
+        dlg.ShowModal() # Show it
+        dlg.Destroy()
 
     def OnAbout(self,e):
         # A message dialog box with an OK button. wx.OK is a standard ID in wxWidgets.
@@ -113,7 +118,11 @@ class MainWindow(wx.Frame):
     def OnChOClick(self,e):
         try:
             self.octaves = float(self.octTC.GetLineText(0))
-            self.recording = m.Sound(self.VChanger.voice_effect(octaves=self.octaves))
+            self.VChanger.voice_effect(octaves=self.octaves)
+            self.recording = m.Sound("m1.wav")
+            dlg = wx.MessageDialog(self, "Octave changing is finished", "Octave changing", wx.OK)
+            dlg.ShowModal() # Show it
+            dlg.Destroy()
         except ValueError:
             pass
 
@@ -122,7 +131,7 @@ class MainWindow(wx.Frame):
             if not self.playing:
                 m.Channel(0).play(self.recording)
                 self.playing = True
-                self.timer.StartOnce(self.n*1000/(2 ** self.octaves)+500)
+                self.timer.StartOnce(self.n*1000+500)
             else:
                 m.Channel(0).unpause()
             self.playBut.SetLabel("&Pause")
