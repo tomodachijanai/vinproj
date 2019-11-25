@@ -58,18 +58,25 @@ class MainWindow(wx.Frame):
         self.playBut.SetFont(k)
         self.playBut.Disable()
         self.playBut.SetToolTip("Play recorded audio")
+        self.chOctBut = wx.Button(self, label="Change &octave")
+        self.chOctBut.SetFont(k)
+        self.chOctBut.Disable()
+        self.chOctBut.SetToolTip("Change current recording's octave")
         self.timer = wx.Timer(self)
         hbox = wx.BoxSizer()
         hbox.Add(self.octTC, flag=wx.EXPAND | wx.ALIGN_LEFT)# | wx.ALIGN_TOP | wx.ALIGN_BOTTOM )
         hbox.AddStretchSpacer()
         hbox.Add(self.nTC, flag=wx.EXPAND | wx.ALIGN_RIGHT)
         vbox.Add(hbox, flag=wx.EXPAND)
+        vbox.AddStretchSpacer()
         vbox.Add(self.playBut, flag=wx.EXPAND )
+        vbox.Add(self.chOctBut, flag=wx.EXPAND )
         self.SetSizer(vbox)
         self.Bind(wx.EVT_MENU, self.OnAbout, menuAbout)
         self.Bind(wx.EVT_MENU, self.OnExit, menuExit)
         self.Bind(wx.EVT_MENU, self.OnRecord, menuRecord)
         self.Bind(wx.EVT_BUTTON, self.OnPlayClick, self.playBut)
+        self.Bind(wx.EVT_BUTTON, self.OnChOClick, self.chOctBut)
         self.Bind(wx.EVT_TIMER, self.OnPlayTimer, self.timer)
 
 
@@ -79,11 +86,11 @@ class MainWindow(wx.Frame):
         self.VChanger.recognize_from_micro(n=self.n)
         self.recording = m.Sound(self.VChanger.voice_effect(octaves=self.octaves))
         self.playBut.Enable()
+        self.chOctBut.Enable()
 
     def OnAbout(self,e):
         # A message dialog box with an OK button. wx.OK is a standard ID in wxWidgets.
-        print(self.GetSize())
-        dlg = wx.MessageDialog(self, "A small text editor", "About Sample Editor", wx.OK)
+        dlg = wx.MessageDialog(self, "A small voice changing util", "About VoiceChanger", wx.OK)
         dlg.ShowModal() # Show it
         dlg.Destroy() # finally destroy it when finished.
 
@@ -95,7 +102,12 @@ class MainWindow(wx.Frame):
         self.playBut.SetLabel("&Play")
         self.playBut.SetToolTip("Play recorded audio")
 
-    def OnPlayClick(self,e):
+    def OnChOClick(self,e):
+        if self.octTC.GetLineText(0).isnumeric():
+            self.octaves = float(self.octTC.GetLineText(0))
+            self.recording = m.Sound(self.VChanger.voice_effect(octaves=self.octaves))
+            
+    def OnPlayClick(self,e): 
         if self.playBut.GetLabel() == "&Play":
             if not self.playing:
                 m.Channel(0).play(self.recording)
