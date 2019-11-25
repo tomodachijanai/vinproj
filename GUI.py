@@ -31,8 +31,8 @@ class MainWindow(wx.Frame):
         
 
     def InitUI(self):
-        self.SetMinClientSize(wx.Size(169, 206))
-        self.SetMaxClientSize(wx.Size(300, 206))
+        self.SetMinClientSize(wx.Size(300, 300))
+        self.SetMaxClientSize(wx.Size(300, 300))
         self.CreateStatusBar()
         filemenu= wx.Menu()
 
@@ -47,8 +47,8 @@ class MainWindow(wx.Frame):
         self.SetMenuBar(menuBar)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
-        self.octTC = wx.TextCtrl(self, style=wx.TE_LEFT)
-        self.nTC = wx.TextCtrl(self, style=wx.TE_LEFT)
+        self.octTC = wx.TextCtrl(self)
+        self.nTC = wx.TextCtrl(self)
         k = self.octTC.GetFont()
         k.SetPointSize(28)
         self.octTC.SetFont(k)
@@ -59,12 +59,13 @@ class MainWindow(wx.Frame):
         self.playBut.Disable()
         self.playBut.SetToolTip("Play recorded audio")
         self.chOctBut = wx.Button(self, label="Change &octave")
+        k.SetPointSize(30)
         self.chOctBut.SetFont(k)
         self.chOctBut.Disable()
         self.chOctBut.SetToolTip("Change current recording's octave")
         self.timer = wx.Timer(self)
         hbox = wx.BoxSizer()
-        hbox.Add(self.octTC, flag=wx.EXPAND | wx.ALIGN_LEFT)# | wx.ALIGN_TOP | wx.ALIGN_BOTTOM )
+        hbox.Add(self.octTC, flag=wx.EXPAND)# | wx.ALIGN_TOP | wx.ALIGN_BOTTOM )
         hbox.AddStretchSpacer()
         hbox.Add(self.nTC, flag=wx.EXPAND | wx.ALIGN_RIGHT)
         vbox.Add(hbox, flag=wx.EXPAND)
@@ -81,8 +82,14 @@ class MainWindow(wx.Frame):
 
 
     def OnRecord(self,e):
-        self.n = (float(self.nTC.GetLineText(0)) if self.nTC.GetLineText(0).isnumeric() else 3)
-        self.octaves = (float(self.octTC.GetLineText(0)) if self.octTC.GetLineText(0).isnumeric() else 1)
+        try:
+            self.n = float(self.nTC.GetLineText(0))
+        except ValueError:
+            self.n = 3
+        try:
+            self.octaves = float(self.octTC.GetLineText(0))
+        except ValueError:
+            self.octaves = 1
         self.VChanger.recognize_from_micro(n=self.n)
         self.recording = m.Sound(self.VChanger.voice_effect(octaves=self.octaves))
         self.playBut.Enable()
@@ -90,6 +97,7 @@ class MainWindow(wx.Frame):
 
     def OnAbout(self,e):
         # A message dialog box with an OK button. wx.OK is a standard ID in wxWidgets.
+        print(self.GetSize())
         dlg = wx.MessageDialog(self, "A small voice changing util", "About VoiceChanger", wx.OK)
         dlg.ShowModal() # Show it
         dlg.Destroy() # finally destroy it when finished.
@@ -103,10 +111,12 @@ class MainWindow(wx.Frame):
         self.playBut.SetToolTip("Play recorded audio")
 
     def OnChOClick(self,e):
-        if self.octTC.GetLineText(0).isnumeric():
+        try:
             self.octaves = float(self.octTC.GetLineText(0))
             self.recording = m.Sound(self.VChanger.voice_effect(octaves=self.octaves))
-            
+        except ValueError:
+            pass
+
     def OnPlayClick(self,e): 
         if self.playBut.GetLabel() == "&Play":
             if not self.playing:
