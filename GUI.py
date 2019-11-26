@@ -15,6 +15,8 @@ def suppress_stdout():
             sys.stderr = old_stderr
 
 with suppress_stdout():
+    import pydub.playback as pb
+    import pydub as pd
     from VoiceChanger import Voice_changer
     from pygame import mixer as m
 
@@ -61,7 +63,7 @@ class MainWindow(wx.Frame):
         k.SetPointSize(30)
         self.chOctBut.SetFont(k)
         self.chOctBut.Disable()
-        self.chOctBut.SetToolTip("Change current recording's octave")
+        self.chOctBut.SetToolTip("Change current recording1's octave")
         self.timer = wx.Timer(self)
         hbox = wx.BoxSizer()
         hbox.Add(self.octTC, flag=wx.EXPAND)# | wx.ALIGN_TOP | wx.ALIGN_BOTTOM )
@@ -86,16 +88,17 @@ class MainWindow(wx.Frame):
         except ValueError:
             self.n = 3
         try:
-            self.octaves = float(self.octTC.GetLineText(0))
+            self.tones = list(map(float, self.octTC.GetLineText(0).split()))
         except ValueError:
-            self.octaves = 1
+            self.tones = [0, 4]
         self.VChanger.recognize_from_micro(n=self.n)
-        sr = self.VChanger.voice_effect(octaves=self.octaves)
-        if not m.get_init():
-            m.init(sr, 16, 1)
-            self.playBut.Enable()
-            self.chOctBut.Enable()
-        self.recording = m.Sound("m1.wav")
+        sr = self.VChanger.voice_effect(tones=self.tones)
+        # if not m.get_init():
+        #     m.init(sr)
+        self.playBut.Enable()
+        self.chOctBut.Enable()
+        # self.recording1 = m.Sound("sounds.mp3")
+        # self.recording2 = m.Sound("male.wav")
         dlg = wx.MessageDialog(self, "Finished recording and processing", "Recording", wx.OK)
         dlg.ShowModal() # Show it
         dlg.Destroy()
@@ -117,29 +120,35 @@ class MainWindow(wx.Frame):
 
     def OnChOClick(self,e):
         try:
-            self.octaves = float(self.octTC.GetLineText(0))
-            self.VChanger.voice_effect(octaves=self.octaves)
-            self.recording = m.Sound("m1.wav")
+            self.tones = list(map(float, self.octTC.GetLineText(0).split()))
+            self.VChanger.voice_effect(tones=self.tones)
+            # self.recording1 = m.Sound("sounds.mp3")
+            # self.recording2 = m.Sound("male.wav")
             dlg = wx.MessageDialog(self, "Octave changing is finished", "Octave changing", wx.OK)
             dlg.ShowModal() # Show it
             dlg.Destroy()
         except ValueError:
             pass
 
-    def OnPlayClick(self,e): 
-        if self.playBut.GetLabel() == "&Play":
-            if not self.playing:
-                m.Channel(0).play(self.recording)
-                self.playing = True
-                self.timer.StartOnce(self.n*1000+500)
+    def OnPlayClick(self,e):
+        pb.play(pd.AudioSegment.from_file("sounds.wav"))
+        if False:
+            if self.playBut.GetLabel() == "&Play":
+                if not self.playing:
+                    m.Channel(0).play(self.recording1)
+                    # m.Channel(1).play(self.recording2)
+                    self.playing = True
+                    self.timer.StartOnce(self.n*1000+500)
+                else:
+                    m.Channel(0).unpause()
+                    # m.Channel(1).unpause()
+                self.playBut.SetLabel("&Pause")
+                self.playBut.SetToolTip("Pause audio")
             else:
-                m.Channel(0).unpause()
-            self.playBut.SetLabel("&Pause")
-            self.playBut.SetToolTip("Pause audio")
-        else:
-            m.Channel(0).pause()
-            self.playBut.SetLabel("&Play")
-            self.playBut.SetToolTip("Play recorded audio")
+                m.Channel(0).pause()
+                # m.Channel(1).pause()
+                self.playBut.SetLabel("&Play")
+                self.playBut.SetToolTip("Play recorded audio")
 
 
 
@@ -153,5 +162,5 @@ def main():
 
 
 if __name__ == "__main__":
-    with suppress_stdout():
-        main()
+    # with suppress_stdout():
+    main()
